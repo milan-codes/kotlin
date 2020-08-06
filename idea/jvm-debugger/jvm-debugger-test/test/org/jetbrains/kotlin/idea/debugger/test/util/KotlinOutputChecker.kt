@@ -14,6 +14,7 @@ import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.util.text.StringUtilRt
 import com.intellij.openapi.vfs.CharsetToolkit
+import org.jetbrains.kotlin.test.TargetBackend
 import org.junit.Assert
 import java.io.File
 import kotlin.math.min
@@ -21,7 +22,8 @@ import kotlin.math.min
 internal class KotlinOutputChecker(
     private val testDir: String,
     appPath: String,
-    outputPath: String
+    outputPath: String,
+    private val useIrBackend: Boolean
 ) : OutputChecker(appPath, outputPath) {
     companion object {
         @JvmStatic
@@ -75,7 +77,20 @@ internal class KotlinOutputChecker(
             LOG.error("Test file created ${outFile.path}\n**************** Don't forget to put it into VCS! *******************")
         } else {
             val originalText = FileUtilRt.loadFile(outFile, CharsetToolkit.UTF8)
-            val expected = StringUtilRt.convertLineSeparators(originalText)
+            val ignoreDirectives = mutableListOf<TargetBackend>()
+            val expected = StringUtilRt.convertLineSeparators(originalText).split("\n").filter {
+                if (it.trim().startsWith("// IGNORE_BACKEND: ")) {
+                    val backends = it.substringAfter(":").split(",")
+                    backends.forEach {
+                        val trimmed = it.trim()
+                        if (trimmed == "JVM_IR") ignoreDirectives.add(TargetBackend.JVM_IR)
+                        if (trimmed == "JVM") ignoreDirectives.add(TargetBackend.JVM)
+                    }
+                    false
+                } else {
+                    true
+                }
+            }.joinToString("\n")
             if (expected != actual) {
                 println("expected:")
                 println(originalText)
@@ -92,7 +107,19 @@ internal class KotlinOutputChecker(
                     println("Rest from actual text is: \"" + actual.substring(len) + "\"")
                 }
 
-                Assert.assertEquals(originalText, actual)
+                // Ignore tests marked as ignored.
+                if (useIrBackend && ignoreDirectives.contains(TargetBackend.JVM_IR)) return
+                if (!useIrBackend && ignoreDirectives.contains(TargetBackend.JVM)) return
+
+                Assert.assertEquals(expected, actual)
+            } else {
+                // Fail if tests are marked as failing, but actually pass.
+                if (useIrBackend && ignoreDirectives.contains(TargetBackend.JVM_IR)) {
+                    throw AssertionError("Test passes and could be unmuted, remove 'IGNORE_BACKEND: JVM_IR' directive")
+                }
+                if (!useIrBackend && ignoreDirectives.contains(TargetBackend.JVM)) {
+                    throw AssertionError("Test passes and could be unmuted, remove 'IGNORE_BACKEND: JVM' directive")
+                }
             }
         }
     }
