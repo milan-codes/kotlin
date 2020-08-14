@@ -1238,7 +1238,8 @@ public class IrKotlinSteppingTestGenerated extends AbstractIrKotlinSteppingTest 
 
         @TestMetadata("smartStepIntoInlinedFunctionalExpression.kt")
         public void testSmartStepIntoInlinedFunctionalExpression() throws Exception {
-            runTest("idea/jvm-debugger/jvm-debugger-test/testData/stepping/custom/smartStepIntoInlinedFunctionalExpression.kt");
+            runTest("idea/jvm-debugger/jvm-debugger-test/testDat" +
+                    "a/stepping/custom/smartStepIntoInlinedFunctionalExpression.kt");
         }
 
         @TestMetadata("smartStepIntoInsideLambda.kt")
