@@ -224,7 +224,7 @@ class InlineClassLowering(val context: CommonBackendContext) {
                     if (function.parent !is IrClass ||
                         function.isStaticMethodOfClass ||
                         !function.parentAsClass.isInline ||
-                        (function is IrSimpleFunction && !function.isReal) ||
+                        !function.isReal ||
                         (function is IrConstructor && function.isPrimary)
                     ) {
                         return expression
@@ -233,7 +233,7 @@ class InlineClassLowering(val context: CommonBackendContext) {
                     return irCall(
                         expression,
                         getOrCreateStaticMethod(function),
-                        receiversAsArguments = (function is IrSimpleFunction)
+                        receiversAsArguments = true
                     )
                 }
 
