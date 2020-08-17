@@ -29,7 +29,12 @@ dependencies {
 }
 
 sourceSets {
-    "main" { projectDefault() }
+    "main" {
+        projectDefault()
+        resources.srcDirs(
+            "resources-en"
+        )
+    }
     "test" { projectDefault() }
 }
 

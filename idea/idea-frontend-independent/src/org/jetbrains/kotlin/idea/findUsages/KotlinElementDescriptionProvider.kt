@@ -27,7 +27,7 @@ import com.intellij.refactoring.util.RefactoringDescriptionLocation
 import com.intellij.usageView.UsageViewLongNameLocation
 import com.intellij.usageView.UsageViewShortNameLocation
 import com.intellij.usageView.UsageViewTypeLocation
-import org.jetbrains.kotlin.asJava.classes.KtLightClassForFacade
+import org.jetbrains.kotlin.asJava.isFacadeClass
 import org.jetbrains.kotlin.asJava.unwrapped
 import org.jetbrains.kotlin.idea.KotlinBundle
 import org.jetbrains.kotlin.idea.KotlinLanguage
@@ -147,9 +147,10 @@ class KotlinElementDescriptionProvider : ElementDescriptionProvider {
             is KtLabeledExpression -> KotlinBundle.message("find.usages.label")
             is KtImportAlias -> KotlinBundle.message("find.usages.import.alias")
             is RenameJavaSyntheticPropertyHandler.SyntheticPropertyWrapper -> KotlinBundle.message("find.usages.property")
-            is KtLightClassForFacade -> KotlinBundle.message("find.usages.facade.class")
             is RenameKotlinPropertyProcessor.PropertyMethodWrapper -> KotlinBundle.message("find.usages.property.accessor")
-            else -> null
+            else -> {
+                if (isFacadeClass(targetElement)) KotlinBundle.message("find.usages.facade.class") else null
+            }
         }
 
         val namedElement = if (targetElement is KtPropertyAccessor) {
